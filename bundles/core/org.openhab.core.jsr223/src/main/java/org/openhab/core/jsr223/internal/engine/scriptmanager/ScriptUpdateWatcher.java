@@ -102,6 +102,7 @@ public class ScriptUpdateWatcher implements Runnable {
 				}
 
 				try {
+					Thread.sleep(1000);
 					scriptManager.scriptsChanged(addedScripts, removedScripts, modifiedScripts);
 				}
 				catch (Exception ex) {
