@@ -1,4 +1,11 @@
 
+## Mod
+
+this is a modification for OpenHab 1.8.x, i am working on this version only for now.
+
+### version 1.8.2
+fix JSR223: should now process new and modify script properly. ( without "file not found" and "can't find getRules()" )
+
 ## Introduction
 
 The open Home Automation Bus (openHAB) project aims at providing a universal integration platform for all things around home automation. It is a pure Java solution, fully based on OSGi. The Equinox OSGi runtime and Jetty as a web server build the core foundation of the runtime.
