@@ -24,18 +24,29 @@ import org.slf4j.LoggerFactory;
 public class Jsr223CoreActivator implements BundleActivator {
 
 	private final static Logger logger = LoggerFactory.getLogger(Jsr223CoreActivator.class);
+	private static BundleContext context;
 	public static ServiceTracker<ActionService, ActionService> actionServiceTracker;
 
 	public void start(BundleContext bc) throws Exception {
 		actionServiceTracker = new ServiceTracker<ActionService, ActionService>(bc, ActionService.class, null);
 		actionServiceTracker.open();
+		context = bc;
 
 		logger.debug("Registered 'jsr223' scripting-engine");
 	}
 
 	public void stop(BundleContext context) throws Exception {
 		actionServiceTracker.close();
+		context = null;
 		logger.debug("UnRegistered 'jsr223' scripting-engine");
+	}
+	
+	/**
+	 * Returns the bundle context of this bundle
+	 * @return the bundle context
+	 */
+	public static BundleContext getContext() {
+		return context;
 	}
 
 }

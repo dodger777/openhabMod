@@ -72,6 +72,10 @@ public class Openhab extends BusEvent {
 	public static Object getAction(String action) {
 		return getActions().get(action);
 	}
+	
+	public static Object getJsr223Action() {
+		return org.openhab.core.jsr223.internal.Jsr223Action.class;
+	}
 
 	public static Logger getLogger(String loggerName) {
 		return LoggerFactory.getLogger(LOGGER_NAME_PREFIX.concat(loggerName));

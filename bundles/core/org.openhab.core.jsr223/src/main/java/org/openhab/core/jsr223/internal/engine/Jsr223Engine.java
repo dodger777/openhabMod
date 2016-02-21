@@ -19,6 +19,7 @@ import org.openhab.core.items.ItemNotFoundException;
 import org.openhab.core.items.ItemRegistry;
 import org.openhab.core.items.ItemRegistryChangeListener;
 import org.openhab.core.items.StateChangeListener;
+import org.openhab.core.jsr223.internal.Jsr223Action;
 import org.openhab.core.jsr223.internal.engine.scriptmanager.ScriptManager;
 import org.openhab.core.jsr223.internal.shared.Rule;
 import org.openhab.core.jsr223.internal.shared.TriggerType;
@@ -48,6 +49,7 @@ public class Jsr223Engine implements EventHandler, ItemRegistryChangeListener, S
 
 	private RuleTriggerManager triggerManager;
 	private ScriptManager scriptManager;
+        //private Jsr223Action jsr223Action;
 
 	private Scheduler scheduler;
 
@@ -68,7 +70,8 @@ public class Jsr223Engine implements EventHandler, ItemRegistryChangeListener, S
 		logger.debug("activate()");
 
 		triggerManager = new RuleTriggerManager(scheduler);
-		scriptManager = new ScriptManager(triggerManager, itemRegistry);
+		scriptManager = new ScriptManager(triggerManager, itemRegistry); 
+                Jsr223Action.setTriggerManager(triggerManager);
 
 		if (!isEnabled()) {
 			logger.info("jsr223 engine is disabled.");

@@ -361,6 +361,11 @@ public class RuleTriggerManager {
 		removeRules(TriggerType.SHUTDOWN, Collections.singletonList(systemShutdownTriggeredRules), rules);
 		removeRules(TriggerType.TIMER, Collections.singletonList(timerEventTriggeredRules), rules);
 	}
+        
+        public void updateTrigger(Rule rule) {
+            removeRuleModel(java.util.Arrays.asList(rule));
+            addRule(rule);
+        }
 
 	private void removeRules(TriggerType type, Collection<? extends Collection<Rule>> ruleSets, List<Rule> rules) {
 		for (Collection<Rule> ruleSet : ruleSets) {
