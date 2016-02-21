@@ -4,9 +4,9 @@
 this is a modification for OpenHab 1.8.x, i am working on this version only for now.
 
 ### version 1.8.2
-fix JSR223: should now process new and modify script properly. ( without "file not found" and "can't find getRules()" )
-add Openhab.getJsr223Action()
-add an action: reloadTriggers(rule)
+- fix JSR223: should now process new and modify script properly. ( without "file not found" and "can't find getRules()" )
+- add Openhab.getJsr223Action()
+- add an action: reloadTriggers(rule)
 
 how to use it:
 ```
