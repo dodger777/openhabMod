@@ -5,6 +5,59 @@ this is a modification for OpenHab 1.8.x, i am working on this version only for 
 
 ### version 1.8.2
 fix JSR223: should now process new and modify script properly. ( without "file not found" and "can't find getRules()" )
+add Openhab.getJsr223Action()
+add an action: reloadTriggers(rule)
+
+how to use it:
+```
+import org.openhab.core.jsr223.internal.shared.*
+import org.openhab.core.items.ItemRegistry
+import org.joda.time.DateTime
+import org.openhab.core.library.types.*
+import java.util.timer.*
+
+
+
+//application test 
+class TestImpl implements Rule {
+    static ItemRegistry itemRegistry
+    static Class pe
+    def logger = Openhab.getLogger('Test')
+	def jsr = Openhab.getJsr223Action()
+	def instance = this
+        boolean isStop = false
+	
+	TestImpl() {
+		logger.info('Test init')
+	}
+
+    java.util.List<EventTrigger> getEventTrigger() {
+		def myTrigger = []
+		myTrigger << new StartupTrigger()
+                if(isStop){
+                    myTrigger << new ShutdownTrigger()
+                }
+		return myTrigger
+    }
+
+    void execute(Event event) {
+		logger.info('test executed!')
+                //you can change your logic to have different eventTrigger...
+                isStrop = true
+		jsr.reloadTriggers(instance)
+                //your new trigger are now opertationnal.
+    }
+	
+	
+}
+
+RuleSet getRules() {
+    return new RuleSet(new TestImpl())
+}
+ 
+TestImpl.itemRegistry = this.ItemRegistry
+TestImpl.pe = this.PersistenceExtensions 
+```
 
 ## Introduction
 
