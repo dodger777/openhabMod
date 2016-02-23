@@ -8,8 +8,6 @@
 
 package org.openhab.core.jsr223.internal.shared;
 
-import java.util.Map;
-
 /**
  * UtilityScript-Interface: Those script will no be executed by trigger, but they can be invoke in rules
  * 
@@ -17,7 +15,4 @@ import java.util.Map;
  */
 public interface UtilityScript {
     
-    public void setGlobal(Object global);
-    
-    public Object getGlobal();
 }

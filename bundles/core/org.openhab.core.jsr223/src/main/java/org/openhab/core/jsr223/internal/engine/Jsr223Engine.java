@@ -72,6 +72,7 @@ public class Jsr223Engine implements EventHandler, ItemRegistryChangeListener, S
 		triggerManager = new RuleTriggerManager(scheduler);
 		scriptManager = new ScriptManager(triggerManager, itemRegistry); 
                 Jsr223Action.setTriggerManager(triggerManager);
+                Jsr223Action.setScriptManager(scriptManager);
 
 		if (!isEnabled()) {
 			logger.info("jsr223 engine is disabled.");

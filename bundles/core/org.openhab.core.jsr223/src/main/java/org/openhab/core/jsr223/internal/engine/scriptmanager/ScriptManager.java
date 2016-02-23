@@ -13,6 +13,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.script.ScriptEngineFactory;
 import javax.script.ScriptEngineManager;
@@ -24,6 +26,7 @@ import org.openhab.core.jsr223.internal.engine.RuleTriggerManager;
 import org.openhab.core.jsr223.internal.shared.Event;
 import org.openhab.core.jsr223.internal.shared.EventTrigger;
 import org.openhab.core.jsr223.internal.shared.Rule;
+import org.openhab.core.jsr223.internal.shared.UtilityScript;
 import org.openhab.core.jsr223.internal.shared.StartupTrigger;
 import org.openhab.core.jsr223.internal.shared.TriggerType;
 import org.slf4j.Logger;
@@ -42,7 +45,8 @@ public class ScriptManager {
 
     public HashMap<String, ScriptRule> scripts = new HashMap<String, ScriptRule>();
     public HashMap<Rule, ScriptRule> ruleMap = new HashMap<Rule, ScriptRule>();
-    public HashMap<String, ScriptRule> utilityScripts = new HashMap<String, ScriptRule>();
+    public HashMap<String, ScriptUtility> utilityScripts = new HashMap<String, ScriptUtility>();
+    public HashMap<UtilityScript, ScriptUtility> utilityScriptMap = new HashMap<UtilityScript, ScriptUtility>();
 
     private ItemRegistry itemRegistry;
 
@@ -81,29 +85,18 @@ public class ScriptManager {
     }
 
     private ScriptBase loadScript(File file) {
-        ScriptBase scriptBase = null;
         ScriptBase script = null;
         try {
             //Filtering Directories and not usable Files
             if (!file.isFile() || file.getName().startsWith(".") || getFileExtension(file) == null) {
                 return null;
             }
-            scriptBase = new ScriptBase(this, file);
-            script = scriptBase.returnScript();
+            script = returnNewScript(file);
             if (!script.isLoaded()) {
                 return null;
             } else {
                 logger.info("Engine found for File: {}", file.getName());
-                if (script.getScriptType() == ScriptBase.TypeScript.RULE) {
-                    scripts.put(file.getName(), (ScriptRule) script);
-                    List<Rule> newRules = ((ScriptRule) script).getRules();
-                    for (Rule rule : newRules) {
-                        ruleMap.put(rule, (ScriptRule) script);
-                    }
-                    // add all rules to the needed triggers
-                    triggerManager.addRuleModel(newRules);
-                }
-
+                insertOrModifyScript(script, file, true);
             }
 
         } catch (NoSuchMethodException e) {
@@ -117,6 +110,40 @@ public class ScriptManager {
         }
 
         return script;
+    }
+
+    private void insertOrModifyScript(ScriptBase script, File file, boolean isInsert) {
+        if (script.getScriptType() == ScriptBase.TypeScript.RULE) {
+            if (isInsert) {
+                scripts.put(file.getName(), (ScriptRule) script);
+            } else {
+                scripts.replace(file.getName(), (ScriptRule) script);
+            }
+
+            List<Rule> newRules = ((ScriptRule) script).getRules();
+            for (Rule rule : newRules) {
+                ruleMap.put(rule, (ScriptRule) script);
+            }
+            // add all rules to the needed triggers
+            triggerManager.addRuleModel(newRules);
+        } else if (script.getScriptType() == ScriptBase.TypeScript.UTILITY_SCRIPT) {
+            if (isInsert) {
+                utilityScripts.put(file.getName(), (ScriptUtility) script);
+            } else {
+                utilityScripts.replace(file.getName(), (ScriptUtility) script);
+            }
+
+            List<UtilityScript> newUtilityScripts = ((ScriptUtility) script).getScripts();
+            for (UtilityScript utilityScript : newUtilityScripts) {
+                utilityScriptMap.put(utilityScript, (ScriptUtility) script);
+
+            }
+        }
+    }
+
+    private ScriptBase returnNewScript(File file) throws FileNotFoundException, ScriptException, NoSuchMethodException {
+        ScriptBase scriptBase = new ScriptBase(this, file);
+        return scriptBase.returnScript();
     }
 
     public static ScriptManager getInstance() {
@@ -172,7 +199,6 @@ public class ScriptManager {
     }
 
     public void scriptsChanged(List<File> addedScripts, List<File> removedScripts, List<File> modifiedScripts) {
-
         for (File scriptFile : removedScripts) {
             removeScript(scriptFile.getName());
         }
@@ -183,9 +209,7 @@ public class ScriptManager {
         }
 
         for (File scriptFile : modifiedScripts) {
-            removeScript(scriptFile.getName());
-            ScriptBase script = loadScript(scriptFile);
-            runStartupRules(script);
+            modifyScript(scriptFile);
         }
     }
 
@@ -210,14 +234,58 @@ public class ScriptManager {
     private void removeScript(String scriptName) {
         if (scripts.containsKey(scriptName)) {
             ScriptRule script = scripts.remove(scriptName);
+            removeRuleTriggers(script);
+        }
+        if (utilityScripts.containsKey(scriptName)) {
+            ScriptUtility script = utilityScripts.remove(scriptName);
+            removeUtilityScriptsMap(script);
+        }
+    }
 
-            List<Rule> allRules = script.getRules();
+    private void removeRuleTriggers(ScriptRule script) {
+        List<Rule> allRules = script.getRules();
 
-            triggerManager.removeRuleModel(allRules);
-            for (Rule rule : allRules) {
-                ruleMap.remove(rule);
+        triggerManager.removeRuleModel(allRules);
+        for (Rule rule : allRules) {
+            ruleMap.remove(rule);
+        }
+    }
+
+    private void removeUtilityScriptsMap(ScriptUtility script) {
+        for (UtilityScript oneScript : script.getScripts()) {
+            utilityScriptMap.remove(oneScript);
+        }
+    }
+
+    private void modifyScript(File scriptFile) {
+        try {
+            String scriptName = scriptFile.getName();
+            Object oldGlobal = null;
+            if (scripts.containsKey(scriptName)) {
+                removeRuleTriggers(scripts.get(scriptName));
+            }
+            if (utilityScripts.containsKey(scriptName)) {
+                removeUtilityScriptsMap(utilityScripts.get(scriptName));
+            }
+            ScriptBase modifiedScript = returnNewScript(scriptFile);
+            insertOrModifyScript(modifiedScript, scriptFile, false);
+            runStartupRules(modifiedScript);
+        } catch (Exception e) {
+            logger.error("unknown exception in modifyScript", e);
+        }
+    }
+
+    public UtilityScript getUtilityScript(String scriptName) {
+        String pattern = "(\\w+)";
+        Pattern r = Pattern.compile(pattern);
+        
+        for (UtilityScript key : utilityScriptMap.keySet()) {
+            Matcher m = r.matcher(key.toString());
+            if ((m.find() && (!m.group(1).isEmpty()) && m.group(1).equals(scriptName))) {
+                return key;
             }
         }
+        return null;
     }
 
 }

@@ -43,7 +43,7 @@ public class ScriptRule extends ScriptBase {
             engine.eval(new FileReader(super.getFile()));
             Invocable inv = (Invocable) engine;
             RuleSet ruleSet = (RuleSet) inv.invokeFunction("getRules");
-            rules.addAll(ruleSet.getRules());   
+            rules.addAll(ruleSet.getRules());
         }
     }
 

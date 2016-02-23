@@ -9,7 +9,9 @@
 package org.openhab.core.jsr223.internal;
 
 import org.openhab.core.jsr223.internal.engine.RuleTriggerManager;
+import org.openhab.core.jsr223.internal.engine.scriptmanager.ScriptManager;
 import org.openhab.core.jsr223.internal.shared.Rule;
+import org.openhab.core.jsr223.internal.shared.UtilityScript;
 import org.openhab.core.scriptengine.action.ActionDoc;
 import org.openhab.core.scriptengine.action.ParamDoc;
 import org.slf4j.Logger;
@@ -29,6 +31,7 @@ import org.slf4j.LoggerFactory;
 
 	static String test;
         static private RuleTriggerManager triggerManager;
+        static private ScriptManager scriptManager;
 
 
 	/**
@@ -51,8 +54,22 @@ import org.slf4j.LoggerFactory;
                 }
 	}
         
+	@ActionDoc(text="Ask the Jsr223 Engine for a utility script")
+	static public UtilityScript getUtilityScript(
+		@ParamDoc(name="TheScript") String scriptName) {
+		try{
+                    return scriptManager.getUtilityScript(scriptName);
+                }catch(Exception e) {
+                    return null;
+                }
+	}
+        
         
         static public void setTriggerManager(RuleTriggerManager tM) {
             triggerManager = tM;
+        }
+        
+        static public void setScriptManager(ScriptManager sM) {
+            scriptManager = sM;
         }
 }

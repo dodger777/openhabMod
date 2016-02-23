@@ -100,21 +100,27 @@ public class ScriptBase {
         ScriptBase theScript;
         theScript = tryNormalScript();
         if(theScript == null) {
-            
+            theScript = tryUtilityScript();
         }
-        
         
         if(theScript == null) {
             throw new NoSuchMethodException();
         }
         return theScript;
+    }
     
+    private ScriptBase tryUtilityScript() throws FileNotFoundException, ScriptException {
+        try {
+            return new ScriptUtility(this);
+        }catch (Exception e) {
+            return null;
+        }
     }
     
     private ScriptBase tryNormalScript() throws FileNotFoundException, ScriptException {
         try {
             return new ScriptRule(this);
-        }catch (NoSuchMethodException e) {
+        }catch (Exception e) {
             return null;
         }
     }
