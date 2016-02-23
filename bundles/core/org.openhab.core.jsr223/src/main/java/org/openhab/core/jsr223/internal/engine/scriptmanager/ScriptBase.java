@@ -12,12 +12,8 @@ package org.openhab.core.jsr223.internal.engine.scriptmanager;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.net.URLEncoder;
-import java.util.ArrayList;
-import java.util.List;
 
-import javax.script.Invocable;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
@@ -26,7 +22,6 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.StringUtils;
 import org.joda.time.DateTime;
-import org.openhab.core.jsr223.internal.engine.RuleExecutionRunnable;
 import org.openhab.core.jsr223.internal.shared.ChangedEventTrigger;
 import org.openhab.core.jsr223.internal.shared.UpdatedEventTrigger;
 import org.openhab.core.jsr223.internal.shared.CommandEventTrigger;
