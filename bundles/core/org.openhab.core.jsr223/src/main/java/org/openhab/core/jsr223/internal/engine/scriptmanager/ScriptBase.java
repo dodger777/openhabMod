@@ -63,7 +63,7 @@ import org.slf4j.LoggerFactory;
  */
 public class ScriptBase {
 
-    static private final Logger logger = LoggerFactory.getLogger(Script.class);
+    static private final Logger logger = LoggerFactory.getLogger(ScriptRule.class);
     private ScriptManager scriptManager;
     private ScriptEngine engine = null;
     private String fileName;
@@ -113,7 +113,7 @@ public class ScriptBase {
     
     private ScriptBase tryNormalScript() throws FileNotFoundException, ScriptException {
         try {
-            return new Script(this);
+            return new ScriptRule(this);
         }catch (NoSuchMethodException e) {
             return null;
         }
@@ -167,7 +167,7 @@ public class ScriptBase {
      *
      */
     private void initializeNashornGlobals() {
-        if (!Script.class.getClassLoader().getParent().toString().contains("ExtClassLoader")) {
+        if (!ScriptRule.class.getClassLoader().getParent().toString().contains("ExtClassLoader")) {
             logger.warn("Found wrong classloader: To prevent Class loading Problems use this directive in start.sh/-.bat: -Dorg.osgi.framework.bundle.parent=ext");
         }
         try {

@@ -31,12 +31,12 @@ import org.slf4j.LoggerFactory;
  * @author Helmut Lehmeyer
  * @since 1.7.0
  */
-public class Script extends ScriptBase {
+public class ScriptRule extends ScriptBase {
 
-    static private final Logger logger = LoggerFactory.getLogger(Script.class);
+    static private final Logger logger = LoggerFactory.getLogger(ScriptRule.class);
     ArrayList<Rule> rules = new ArrayList<Rule>();
 
-    public Script(ScriptBase scriptbase) throws FileNotFoundException, ScriptException, NoSuchMethodException {
+    public ScriptRule(ScriptBase scriptbase) throws FileNotFoundException, ScriptException, NoSuchMethodException {
         super(scriptbase);
         if(this.isLoaded()) {
             ScriptEngine engine = super.getEngine();

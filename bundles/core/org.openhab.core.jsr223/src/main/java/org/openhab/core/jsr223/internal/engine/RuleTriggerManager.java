@@ -19,7 +19,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.openhab.core.items.Item;
-import org.openhab.core.jsr223.internal.engine.scriptmanager.Script;
+import org.openhab.core.jsr223.internal.engine.scriptmanager.ScriptRule;
 import org.openhab.core.jsr223.internal.engine.scriptmanager.ScriptManager;
 import org.openhab.core.jsr223.internal.shared.ChangedEventTrigger;
 import org.openhab.core.jsr223.internal.shared.UpdatedEventTrigger;
@@ -448,7 +448,7 @@ public class RuleTriggerManager {
 	}
 
 	private String getJobIdentityString(Rule rule, TimerTrigger trigger) {
-		Script script = ScriptManager.getInstance().getScript(rule);
+		ScriptRule script = ScriptManager.getInstance().getScript(rule);
 		String jobIdentity = script.getFileName() + "#" + rule;
 		if (trigger != null) {
 			if (trigger.getCron() != null) {

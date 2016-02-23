@@ -40,9 +40,9 @@ public class ScriptManager {
 
     static private final Logger logger = LoggerFactory.getLogger(ScriptManager.class);
 
-    public HashMap<String, Script> scripts = new HashMap<String, Script>();
-    public HashMap<Rule, Script> ruleMap = new HashMap<Rule, Script>();
-    public HashMap<String, Script> utilityScripts = new HashMap<String, Script>();
+    public HashMap<String, ScriptRule> scripts = new HashMap<String, ScriptRule>();
+    public HashMap<Rule, ScriptRule> ruleMap = new HashMap<Rule, ScriptRule>();
+    public HashMap<String, ScriptRule> utilityScripts = new HashMap<String, ScriptRule>();
 
     private ItemRegistry itemRegistry;
 
@@ -95,10 +95,10 @@ public class ScriptManager {
             } else {
                 logger.info("Engine found for File: {}", file.getName());
                 if (script.getScriptType() == ScriptBase.TypeScript.RULE) {
-                    scripts.put(file.getName(), (Script) script);
-                    List<Rule> newRules = ((Script) script).getRules();
+                    scripts.put(file.getName(), (ScriptRule) script);
+                    List<Rule> newRules = ((ScriptRule) script).getRules();
                     for (Rule rule : newRules) {
-                        ruleMap.put(rule, (Script) script);
+                        ruleMap.put(rule, (ScriptRule) script);
                     }
                     // add all rules to the needed triggers
                     triggerManager.addRuleModel(newRules);
@@ -158,7 +158,7 @@ public class ScriptManager {
         return folder;
     }
 
-    public Script getScript(Rule rule) {
+    public ScriptRule getScript(Rule rule) {
         return ruleMap.get(rule);
     }
 
@@ -191,7 +191,7 @@ public class ScriptManager {
 
     private void runStartupRules(ScriptBase scriptBase) {
         if (scriptBase != null && scriptBase.getScriptType() == ScriptBase.TypeScript.RULE) {
-            Script script = (Script) scriptBase;
+            ScriptRule script = (ScriptRule) scriptBase;
             ArrayList<Rule> toTrigger = new ArrayList<Rule>();
             for (Rule rule : script.getRules()) {
                 for (EventTrigger trigger : rule.getEventTrigger()) {
@@ -209,7 +209,7 @@ public class ScriptManager {
 
     private void removeScript(String scriptName) {
         if (scripts.containsKey(scriptName)) {
-            Script script = scripts.remove(scriptName);
+            ScriptRule script = scripts.remove(scriptName);
 
             List<Rule> allRules = script.getRules();
 
