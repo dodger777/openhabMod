@@ -34,18 +34,21 @@ import org.slf4j.LoggerFactory;
 	/**
 	 * ask the engine to reload the rule triggers
 	 * 
-	 * @param rulesConfigs the rule configuration
+	 * @param TheRule the rule class
 	 * 
 	 * @return <code>true</code>, if reloading the trigger is successfull 
 	 * <code>false</code> in all other cases.
 	 */
 	@ActionDoc(text="Ask the Jsr223 Engine to reload a script Triggers")
 	static public boolean reloadTriggers(
-		@ParamDoc(name="rulesConfigs") Rule rule) {
-		
-		logger.debug("Rules ask for triggers reset!! ".concat(rule.toString()));
-                triggerManager.updateTrigger(rule);
-		return false;
+		@ParamDoc(name="TheRule") Rule rule) {
+		try{
+                    logger.debug("Rules ask for triggers reset!! ".concat(rule.toString()));
+                    triggerManager.updateTrigger(rule);
+                    return true;
+                }catch(Exception e) {
+                    return false;
+                }
 	}
         
         

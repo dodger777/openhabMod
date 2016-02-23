@@ -1,9 +1,8 @@
 /**
  * Copyright (c) 2010-2015, openHAB.org and others.
  *
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
+ * All rights reserved. This program and the accompanying materials are made available under the terms of the Eclipse
+ * Public License v1.0 which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
  */
 package org.openhab.core.jsr223.internal.engine.scriptmanager;
@@ -31,189 +30,194 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Main component of script engine. It checks for available Script engines, 
- * loads scripts from the scripts directory
- * and listens for script changes (which lead to script reloading)
- * 
+ * Main component of script engine. It checks for available Script engines, loads scripts from the scripts directory and
+ * listens for script changes (which lead to script reloading)
+ *
  * @author Simon Merschjohann
  * @since 1.7.0
  */
 public class ScriptManager {
-	static private final Logger logger = LoggerFactory.getLogger(ScriptManager.class);
 
-	public HashMap<String, Script> scripts = new HashMap<String, Script>();
-	public HashMap<Rule, Script> ruleMap = new HashMap<Rule, Script>();
+    static private final Logger logger = LoggerFactory.getLogger(ScriptManager.class);
 
-	private ItemRegistry itemRegistry;
+    public HashMap<String, Script> scripts = new HashMap<String, Script>();
+    public HashMap<Rule, Script> ruleMap = new HashMap<Rule, Script>();
+    public HashMap<String, Script> utilityScripts = new HashMap<String, Script>();
 
-	private RuleTriggerManager triggerManager;
+    private ItemRegistry itemRegistry;
 
-	private Thread scriptUpdateWatcher;
+    private RuleTriggerManager triggerManager;
 
-	private static ScriptManager instance;
+    private Thread scriptUpdateWatcher;
 
-	public ScriptManager(RuleTriggerManager triggerManager, ItemRegistry itemRegistry) {
-		this.triggerManager = triggerManager;
-		instance = this;
-		logger.info("Available engines:");
-		for (ScriptEngineFactory f : new ScriptEngineManager().getEngineFactories()) {
-			logger.info(f.getEngineName());
-		}
+    private static ScriptManager instance;
 
-		this.setItemRegistry(itemRegistry);
+    public ScriptManager(RuleTriggerManager triggerManager, ItemRegistry itemRegistry) {
+        this.triggerManager = triggerManager;
+        instance = this;
+        logger.info("Available engines:");
+        for (ScriptEngineFactory f : new ScriptEngineManager().getEngineFactories()) {
+            logger.info(f.getEngineName());
+        }
 
-		File folder = getFolder("scripts");
+        this.setItemRegistry(itemRegistry);
 
-		if (folder.exists() && folder.isDirectory()) {
-			loadScripts(folder);
+        File folder = getFolder("scripts");
 
-			scriptUpdateWatcher = new Thread(new ScriptUpdateWatcher(this, folder));
-			scriptUpdateWatcher.start();
-		} else {
-			logger.warn("Script directory: jsr_scripts missing, no scripts will be added!");
-		}
-	}
+        if (folder.exists() && folder.isDirectory()) {
+            loadScripts(folder);
 
-	public void loadScripts(File folder) {
-		for (File file : folder.listFiles()) {
-			loadScript(file);
-		}
-	}
+            scriptUpdateWatcher = new Thread(new ScriptUpdateWatcher(this, folder));
+            scriptUpdateWatcher.start();
+        } else {
+            logger.warn("Script directory: jsr_scripts missing, no scripts will be added!");
+        }
+    }
 
-	private Script loadScript(File file) {
-		Script script = null;
-		try {
-			//Filtering Directories and not usable Files
-			if(!file.isFile() || file.getName().startsWith(".") || getFileExtension(file) == null){
-				return null;
-			}
-			script = new Script(this, file);
-			if(script.getEngine() == null){
-				logger.warn("No Engine found for File: {}", file.getName());
-				return null;
-			}else{
-				logger.info("Engine found for File: {}", file.getName());
-				scripts.put(file.getName(), script);
-				List<Rule> newRules = script.getRules();
-				for (Rule rule : newRules) {
-					ruleMap.put(rule, script);
-				}
+    public void loadScripts(File folder) {
+        for (File file : folder.listFiles()) {
+            loadScript(file);
+        }
+    }
 
-				// add all rules to the needed triggers
-				triggerManager.addRuleModel(newRules);
-			}
+    private ScriptBase loadScript(File file) {
+        ScriptBase scriptBase = null;
+        ScriptBase script = null;
+        try {
+            //Filtering Directories and not usable Files
+            if (!file.isFile() || file.getName().startsWith(".") || getFileExtension(file) == null) {
+                return null;
+            }
+            scriptBase = new ScriptBase(this, file);
+            script = scriptBase.returnScript();
+            if (!script.isLoaded()) {
+                return null;
+            } else {
+                logger.info("Engine found for File: {}", file.getName());
+                if (script.getScriptType() == ScriptBase.TypeScript.RULE) {
+                    scripts.put(file.getName(), (Script) script);
+                    List<Rule> newRules = ((Script) script).getRules();
+                    for (Rule rule : newRules) {
+                        ruleMap.put(rule, (Script) script);
+                    }
+                    // add all rules to the needed triggers
+                    triggerManager.addRuleModel(newRules);
+                }
 
-		} catch(NoSuchMethodException e) {
-			logger.error("Script file misses mandotary function: getRules()", e);
-		} catch (FileNotFoundException e) {
-			logger.error("script file not found", e);
-		} catch (ScriptException e) {
-			logger.error("script exception", e);
-		} catch (Exception e) {
-			logger.error("unknown exception", e);
-		}
+            }
 
-		return script;
-	}
+        } catch (NoSuchMethodException e) {
+            logger.error("Script file misses mandotary function: getRules()", e);
+        } catch (FileNotFoundException e) {
+            logger.error("script file not found", e);
+        } catch (ScriptException e) {
+            logger.error("script exception", e);
+        } catch (Exception e) {
+            logger.error("unknown exception", e);
+        }
 
-	public static ScriptManager getInstance() {
-		return instance;
-	}
+        return script;
+    }
 
-	public Collection<Rule> getAllRules() {
-		return ruleMap.keySet();
-	}
+    public static ScriptManager getInstance() {
+        return instance;
+    }
 
-	public ItemRegistry getItemRegistry() {
-		return itemRegistry;
-	}
+    public Collection<Rule> getAllRules() {
+        return ruleMap.keySet();
+    }
 
-	public void setItemRegistry(ItemRegistry itemRegistry) {
-		this.itemRegistry = itemRegistry;
-	}
+    public ItemRegistry getItemRegistry() {
+        return itemRegistry;
+    }
 
-	public synchronized void executeRules(Rule[] rules, org.openhab.core.jsr223.internal.shared.Event event) {
-		for (Rule rule : rules) {
-			ruleMap.get(rule).executeRule(rule, event);
-		}
-	}
+    public void setItemRegistry(ItemRegistry itemRegistry) {
+        this.itemRegistry = itemRegistry;
+    }
 
-	public synchronized void executeRules(Iterable<Rule> rules, org.openhab.core.jsr223.internal.shared.Event event) {
-		for (Rule rule : rules) {
-			ruleMap.get(rule).executeRule(rule, event);
-		}
-	}
+    public synchronized void executeRules(Rule[] rules, org.openhab.core.jsr223.internal.shared.Event event) {
+        for (Rule rule : rules) {
+            ruleMap.get(rule).executeRule(rule, event);
+        }
+    }
 
-	/**
-	 * returns the {@link File} object for a given foldername
-	 * 
-	 * @param foldername
-	 *            the foldername to get the {@link File} for
-	 * @return the corresponding {@link File}
-	 */
-	private File getFolder(String foldername) {
-		File folder = new File(ConfigDispatcher.getConfigFolder() + File.separator + foldername);
-		return folder;
-	}
+    public synchronized void executeRules(Iterable<Rule> rules, org.openhab.core.jsr223.internal.shared.Event event) {
+        for (Rule rule : rules) {
+            ruleMap.get(rule).executeRule(rule, event);
+        }
+    }
 
-	public Script getScript(Rule rule) {
-		return ruleMap.get(rule);
-	}
+    /**
+     * returns the {@link File} object for a given foldername
+     *
+     * @param foldername the foldername to get the {@link File} for
+     * @return the corresponding {@link File}
+     */
+    private File getFolder(String foldername) {
+        File folder = new File(ConfigDispatcher.getConfigFolder() + File.separator + foldername);
+        return folder;
+    }
 
-	private String getFileExtension(File file) {
-		String extension = null;
-		if (file.getName().contains(".")) {
-			String name = file.getName();
-			extension = name.substring(name.lastIndexOf('.') + 1, name.length());
-		}
-		return extension;
-	}
+    public Script getScript(Rule rule) {
+        return ruleMap.get(rule);
+    }
 
-	public void scriptsChanged(List<File> addedScripts, List<File> removedScripts, List<File> modifiedScripts) {
+    private String getFileExtension(File file) {
+        String extension = null;
+        if (file.getName().contains(".")) {
+            String name = file.getName();
+            extension = name.substring(name.lastIndexOf('.') + 1, name.length());
+        }
+        return extension;
+    }
 
-		for (File scriptFile : removedScripts) {
-			removeScript(scriptFile.getName());
-		}
+    public void scriptsChanged(List<File> addedScripts, List<File> removedScripts, List<File> modifiedScripts) {
 
-		for (File scriptFile : addedScripts) {
-			Script script = loadScript(scriptFile);
-			runStartupRules(script);
-		}
+        for (File scriptFile : removedScripts) {
+            removeScript(scriptFile.getName());
+        }
 
-		for (File scriptFile : modifiedScripts) {
-			removeScript(scriptFile.getName());
-			Script script = loadScript(scriptFile);
-			runStartupRules(script);
-		}
-	}
+        for (File scriptFile : addedScripts) {
+            ScriptBase script = loadScript(scriptFile);
+            runStartupRules(script);
+        }
 
-	private void runStartupRules(Script script) {
-		if (script != null) {
-			ArrayList<Rule> toTrigger = new ArrayList<Rule>();
-			for (Rule rule : script.getRules()) {
-				for (EventTrigger trigger : rule.getEventTrigger()) {
-					if (trigger instanceof StartupTrigger) {
-						toTrigger.add(rule);
-						break;
-					}
-				}
-			}
-			if (toTrigger.size() > 0)
-				executeRules(toTrigger, new Event(TriggerType.STARTUP, null, null, null, null));
-		}
-	}
+        for (File scriptFile : modifiedScripts) {
+            removeScript(scriptFile.getName());
+            ScriptBase script = loadScript(scriptFile);
+            runStartupRules(script);
+        }
+    }
 
-	private void removeScript(String scriptName) {
-		if(scripts.containsKey(scriptName)) {
-			Script script = scripts.remove(scriptName);
+    private void runStartupRules(ScriptBase scriptBase) {
+        if (scriptBase != null && scriptBase.getScriptType() == ScriptBase.TypeScript.RULE) {
+            Script script = (Script) scriptBase;
+            ArrayList<Rule> toTrigger = new ArrayList<Rule>();
+            for (Rule rule : script.getRules()) {
+                for (EventTrigger trigger : rule.getEventTrigger()) {
+                    if (trigger instanceof StartupTrigger) {
+                        toTrigger.add(rule);
+                        break;
+                    }
+                }
+            }
+            if (toTrigger.size() > 0) {
+                executeRules(toTrigger, new Event(TriggerType.STARTUP, null, null, null, null));
+            }
+        }
+    }
 
-			List<Rule> allRules = script.getRules();
+    private void removeScript(String scriptName) {
+        if (scripts.containsKey(scriptName)) {
+            Script script = scripts.remove(scriptName);
 
-			triggerManager.removeRuleModel(allRules);
-			for (Rule rule : allRules) {
-				ruleMap.remove(rule);
-			}
-		}
-	}
+            List<Rule> allRules = script.getRules();
+
+            triggerManager.removeRuleModel(allRules);
+            for (Rule rule : allRules) {
+                ruleMap.remove(rule);
+            }
+        }
+    }
 
 }
