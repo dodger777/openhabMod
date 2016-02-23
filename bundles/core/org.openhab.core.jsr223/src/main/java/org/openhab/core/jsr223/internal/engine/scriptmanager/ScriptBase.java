@@ -34,6 +34,8 @@ import org.openhab.core.jsr223.internal.shared.ShutdownTrigger;
 import org.openhab.core.jsr223.internal.shared.StartupTrigger;
 import org.openhab.core.jsr223.internal.shared.TimerTrigger;
 import org.openhab.core.jsr223.internal.shared.TriggerType;
+import org.openhab.core.jsr223.internal.shared.UtilityScript;
+import org.openhab.core.jsr223.internal.shared.Application;
 import org.openhab.core.library.types.DateTimeType;
 import org.openhab.core.library.types.DecimalType;
 import org.openhab.core.library.types.HSBType;
@@ -176,6 +178,8 @@ public class ScriptBase {
             engine.eval("var shared = org.openhab.core.jsr223.internal.shared,\n"
                     + "RuleSet 				= Java.type('org.openhab.core.jsr223.internal.shared.RuleSet'),\n"
                     + "Rule 					= Java.type('org.openhab.core.jsr223.internal.shared.Rule'),\n"
+                    + "UtilityScript 				= Java.type('org.openhab.core.jsr223.internal.shared.UtilityScript'),\n"
+                    + "Application 				= Java.type('org.openhab.core.jsr223.internal.shared.Application'),\n"
                     + "ChangedEventTrigger 	= Java.type('org.openhab.core.jsr223.internal.shared.ChangedEventTrigger'),\n"
                     + "CommandEventTrigger 	= Java.type('org.openhab.core.jsr223.internal.shared.CommandEventTrigger'),\n"
                     + "Event 				= Java.type('org.openhab.core.jsr223.internal.shared.Event'),\n"
@@ -234,6 +238,8 @@ public class ScriptBase {
     private void initializeGeneralGlobals() {
         engine.put("RuleSet", RuleSet.class);
         engine.put("Rule", Rule.class);
+        engine.put("UtilityScript", UtilityScript.class);
+        engine.put("Application", Application.class);
         engine.put("ChangedEventTrigger", ChangedEventTrigger.class);
         engine.put("UpdatedEventTrigger", UpdatedEventTrigger.class);
         engine.put("CommandEventTrigger", CommandEventTrigger.class);
