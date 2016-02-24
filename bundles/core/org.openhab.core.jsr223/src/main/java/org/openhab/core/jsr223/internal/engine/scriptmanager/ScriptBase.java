@@ -69,18 +69,19 @@ public class ScriptBase {
     private String fileName;
     private File file;
     private boolean loaded = false;
-    
-    public enum TypeScript{
+
+    public enum TypeScript {
+
         RULE, UTILITY_SCRIPT, APPLICATION, NONE;
     }
-    
+
     public TypeScript getScriptType() {
         return TypeScript.NONE;
     }
 
-    public ScriptBase(){
+    public ScriptBase() {
     }
-    
+
     public ScriptBase(ScriptBase sb) {
         engine = sb.getEngine();
         fileName = sb.getFileName();
@@ -88,54 +89,55 @@ public class ScriptBase {
         file = sb.getFile();
         loaded = sb.isLoaded();
     }
-    
+
     public ScriptBase(ScriptManager scriptManager, File file) throws FileNotFoundException, ScriptException, NoSuchMethodException {
         this.scriptManager = scriptManager;
         this.fileName = file.getName();
         this.file = file;
         loadScript(file);
     }
-    
+
     public ScriptBase returnScript() throws FileNotFoundException, ScriptException, NoSuchMethodException {
         ScriptBase theScript;
         theScript = tryNormalScript();
-        if(theScript == null) {
+        if (theScript == null) {
             theScript = tryUtilityScript();
         }
-        
-        if(theScript == null) {
+
+        if (theScript == null) {
             throw new NoSuchMethodException();
         }
         return theScript;
     }
-    
+
     private ScriptBase tryUtilityScript() throws FileNotFoundException, ScriptException {
         try {
             return new ScriptUtility(this);
-        }catch (Exception e) {
+        } catch (Exception e) {
             return null;
         }
     }
-    
+
     private ScriptBase tryNormalScript() throws FileNotFoundException, ScriptException {
         try {
             return new ScriptRule(this);
-        }catch (Exception e) {
+        } catch (Exception e) {
             return null;
         }
     }
 
     public void loadScript(File file) throws FileNotFoundException, ScriptException, NoSuchMethodException {
-        logger.info("Loading Script " + file.getName());
         String extension = getFileExtension(file);
-        ScriptEngineManager factory = new ScriptEngineManager();
-        engine = factory.getEngineByExtension(extension);
-        if (engine != null) {
-            logger.info("EngineName: " + engine.getFactory().getEngineName());
-            initializeSciptGlobals();
-            loaded = true;
-        }else{
-            logger.warn("No Engine found for File: {}", file.getName());
+        if (extension != null) {
+            ScriptEngineManager factory = new ScriptEngineManager();
+            engine = factory.getEngineByExtension(extension);
+            if (engine != null) {
+                logger.info("EngineName: " + engine.getFactory().getEngineName());
+                initializeSciptGlobals();
+                loaded = true;
+            } else {
+                logger.warn("No Engine found for File: {}", file.getName());
+            }
         }
     }
 
@@ -304,16 +306,16 @@ public class ScriptBase {
     public ScriptEngine getEngine() {
         return engine;
     }
-    
+
     public ScriptManager getScriptManager() {
         return scriptManager;
     }
-    
+
     public File getFile() {
         return file;
     }
-    
-    public boolean isLoaded(){
+
+    public boolean isLoaded() {
         return loaded;
     }
 }

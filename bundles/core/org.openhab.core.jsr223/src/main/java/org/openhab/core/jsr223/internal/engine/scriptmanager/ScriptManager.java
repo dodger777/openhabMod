@@ -258,27 +258,30 @@ public class ScriptManager {
     }
 
     private void modifyScript(File scriptFile) {
-        try {
-            String scriptName = scriptFile.getName();
-            Object oldGlobal = null;
-            if (scripts.containsKey(scriptName)) {
-                removeRuleTriggers(scripts.get(scriptName));
+        //Filtering Directories and not usable Files
+        if (!(!scriptFile.isFile() || scriptFile.getName().startsWith(".") || getFileExtension(scriptFile) == null)) {
+            try {
+                String scriptName = scriptFile.getName();
+                Object oldGlobal = null;
+                if (scripts.containsKey(scriptName)) {
+                    removeRuleTriggers(scripts.get(scriptName));
+                }
+                if (utilityScripts.containsKey(scriptName)) {
+                    removeUtilityScriptsMap(utilityScripts.get(scriptName));
+                }
+                ScriptBase modifiedScript = returnNewScript(scriptFile);
+                insertOrModifyScript(modifiedScript, scriptFile, false);
+                runStartupRules(modifiedScript);
+            } catch (Exception e) {
+                logger.error("unknown exception in modifyScript", e);
             }
-            if (utilityScripts.containsKey(scriptName)) {
-                removeUtilityScriptsMap(utilityScripts.get(scriptName));
-            }
-            ScriptBase modifiedScript = returnNewScript(scriptFile);
-            insertOrModifyScript(modifiedScript, scriptFile, false);
-            runStartupRules(modifiedScript);
-        } catch (Exception e) {
-            logger.error("unknown exception in modifyScript", e);
         }
     }
 
     public UtilityScript getUtilityScript(String scriptName) {
         String pattern = "(\\w+)";
         Pattern r = Pattern.compile(pattern);
-        
+
         for (UtilityScript key : utilityScriptMap.keySet()) {
             Matcher m = r.matcher(key.toString());
             if ((m.find() && (!m.group(1).isEmpty()) && m.group(1).equals(scriptName))) {
