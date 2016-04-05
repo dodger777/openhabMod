@@ -90,7 +90,7 @@ public class ScriptBase {
         loaded = sb.isLoaded();
     }
 
-    public ScriptBase(ScriptManager scriptManager, File file) throws FileNotFoundException, ScriptException, NoSuchMethodException {
+    public ScriptBase(ScriptManager scriptManager, File file) throws FileNotFoundException, ScriptException {
         this.scriptManager = scriptManager;
         this.fileName = file.getName();
         this.file = file;
@@ -101,32 +101,25 @@ public class ScriptBase {
         ScriptBase theScript;
         theScript = tryNormalScript();
         if (theScript == null) {
-            theScript = tryUtilityScript();
-        }
-
-        if (theScript == null) {
-            throw new NoSuchMethodException();
+            theScript = new ScriptUtility(this);
         }
         return theScript;
-    }
-
-    private ScriptBase tryUtilityScript() throws FileNotFoundException, ScriptException {
-        try {
-            return new ScriptUtility(this);
-        } catch (Exception e) {
-            return null;
-        }
     }
 
     private ScriptBase tryNormalScript() throws FileNotFoundException, ScriptException {
         try {
             return new ScriptRule(this);
-        } catch (Exception e) {
+        } catch (ScriptException e) {
+            logger.error("Error in script", e);
+            throw e;
+        } catch (FileNotFoundException e) {
+            throw e;
+        } catch (NoSuchMethodException e) {
             return null;
         }
     }
 
-    public void loadScript(File file) throws FileNotFoundException, ScriptException, NoSuchMethodException {
+    public void loadScript(File file) throws FileNotFoundException, ScriptException {
         String extension = getFileExtension(file);
         if (extension != null) {
             ScriptEngineManager factory = new ScriptEngineManager();

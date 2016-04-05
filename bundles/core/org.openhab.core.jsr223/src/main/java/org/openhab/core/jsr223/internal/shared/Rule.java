@@ -16,7 +16,7 @@ import java.util.List;
  * @author Simon Merschjohann
  * @since 1.7.0
  */
-public interface Rule {
+public interface Rule extends ScriptInterface {
 	public List<EventTrigger> getEventTrigger();
 
 	public void execute(Event event);

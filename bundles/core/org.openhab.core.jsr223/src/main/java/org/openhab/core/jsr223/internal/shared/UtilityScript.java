@@ -13,6 +13,6 @@ package org.openhab.core.jsr223.internal.shared;
  * 
  * @author Joel Perron
  */
-public interface UtilityScript {
+public interface UtilityScript extends ScriptInterface {
     
 }

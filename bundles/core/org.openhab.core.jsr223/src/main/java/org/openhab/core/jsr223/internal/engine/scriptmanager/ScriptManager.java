@@ -45,6 +45,7 @@ public class ScriptManager {
 
     public HashMap<String, ScriptRule> scripts = new HashMap<String, ScriptRule>();
     public HashMap<Rule, ScriptRule> ruleMap = new HashMap<Rule, ScriptRule>();
+
     public HashMap<String, ScriptUtility> utilityScripts = new HashMap<String, ScriptUtility>();
     public HashMap<UtilityScript, ScriptUtility> utilityScriptMap = new HashMap<UtilityScript, ScriptUtility>();
 
@@ -88,28 +89,32 @@ public class ScriptManager {
         ScriptBase script = null;
         try {
             //Filtering Directories and not usable Files
-            if (!file.isFile() || file.getName().startsWith(".") || getFileExtension(file) == null) {
+            if (isFileAcceptable(file)) {
+                script = returnNewScript(file);
+                if (!script.isLoaded()) {
+                    return null;
+                } else {
+                    logger.info("Engine found for File: {}", file.getName());
+                    insertOrModifyScript(script, file, true);
+                } 
+            }else{
                 return null;
-            }
-            script = returnNewScript(file);
-            if (!script.isLoaded()) {
-                return null;
-            } else {
-                logger.info("Engine found for File: {}", file.getName());
-                insertOrModifyScript(script, file, true);
             }
 
+
         } catch (NoSuchMethodException e) {
-            logger.error("Script file misses mandotary function: getRules()", e);
+            logger.warn("Script file misses mandotary function: getRules() or getUtilityScripts()", e);
         } catch (FileNotFoundException e) {
             logger.error("script file not found", e);
-        } catch (ScriptException e) {
-            logger.error("script exception", e);
         } catch (Exception e) {
             logger.error("unknown exception", e);
         }
 
         return script;
+    }
+    
+    private boolean isFileAcceptable(File file) {
+        return (file.isFile() && !file.getName().startsWith(".") && getFileExtension(file) != null && !getFileExtension(file).equals("script"));
     }
 
     private void insertOrModifyScript(ScriptBase script, File file, boolean isInsert) {
